@@ -20,7 +20,7 @@ const scene = new THREE.Scene()
 /**
  * Geometry
  */
-const particleGeometry = new THREE.BoxBufferGeometry(1.0, 1.0, 1.0)
+const particleGeometry = new THREE.BufferGeometry()
 const count = 50
 
 const positions = new Float32Array(count * 3)
@@ -127,26 +127,28 @@ const tick = () => {
 
   raycaster.setFromCamera(mouse, camera)
 
+  // Update Particles
+
+  //   for (let i = 0; i < count; i++) {
+  //     const i3 = i * 3
+  //     const x = particleGeometry.attributes.position.array[i3]
+  //     particleGeometry.attributes.position.array[i3 + 1] = Math.cos(
+  //       elapsedTime + x * 0.2
+  //     )
+  //   }
+  //   particleGeometry.attributes.position.needsUpdate = true
+
   const intersections = raycaster.intersectObjects([particles], false)
   intersection = intersections.length > 0 ? intersections[0] : null
 
   if (intersection) {
-    intersection.object.geometry.attributes.position.array[1] = 10
+    const index = intersection.index
+    const i3 = index * 3
+    const y = particleGeometry.attributes.position.array[i3 + 1]
+    particleGeometry.attributes.position.array[i3 + 1] = y + 10
+
     particleGeometry.attributes.position.needsUpdate = true
-
-    console.log(intersection, particles)
   }
-  // Update Particles
-
-  //particles.rotation.y = elapsedTime * 0.2
-  for (let i = 0; i < count; i++) {
-    const i3 = i * 3
-    const x = particleGeometry.attributes.position.array[i3]
-    particleGeometry.attributes.position.array[i3 + 1] = Math.cos(
-      elapsedTime + x * 0.2
-    )
-  }
-  particleGeometry.attributes.position.needsUpdate = true
 
   // Update controls
   //   controls.update()
