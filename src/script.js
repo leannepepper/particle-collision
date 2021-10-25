@@ -186,7 +186,7 @@ const tick = () => {
     const i3 = index * 3
 
     const x = particleGeometry.attributes.position.array[i3]
-    const animateYValue = Math.cos(elapsedTime + x * 0.2)
+    const animateYValue = Math.sin(elapsedTime + x + count * 0.2) * 5.0
     particleGeometry.attributes.position.array[i3 + 1] = animateYValue
 
     particleGeometry.attributes.position.needsUpdate = true
