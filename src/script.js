@@ -46,7 +46,7 @@ const positions = new Float32Array(count * 3)
 for (let i = 0; i < count; i++) {
   const i3 = i * 3
   positions[i3] = i
-  positions[i3 + 1] = 0
+  positions[i3 + 1] = Math.sin(i * 0.2) * 2.0
   positions[i3 + 2] = 0
 }
 
@@ -88,8 +88,10 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100
 )
-
+camera.position.x = 0
+camera.position.y = 0
 camera.position.z = 40
+
 scene.add(camera)
 
 /**
@@ -160,24 +162,28 @@ const tick = () => {
 
     for (let i = 0; i < disruptRadius; i++) {
       const rightSideEffectParticleIndex = (intersection.index + i) * 3
+      if (rightSideEffectParticleIndex < count) {
+        const rightSideParticle = {
+          index: intersection.index + i,
+          yInitalValue:
+            particleGeometry.attributes.position.array[
+              rightSideEffectParticleIndex + 1
+            ]
+        }
+        animatingParticles.push(rightSideParticle)
+      }
+
       const leftSideEffectParticleIndex = (intersection.index - i) * 3
-
-      const rightSideParticle = {
-        index: intersection.index + i,
-        yInitalValue:
-          particleGeometry.attributes.position.array[
-            rightSideEffectParticleIndex + 1
-          ]
+      if (leftSideEffectParticleIndex > 0) {
+        const leftSideParticle = {
+          index: intersection.index - i,
+          yInitalValue:
+            particleGeometry.attributes.position.array[
+              leftSideEffectParticleIndex + 1
+            ]
+        }
+        animatingParticles.push(leftSideParticle)
       }
-      const leftSideParticle = {
-        index: intersection.index - i,
-        yInitalValue:
-          particleGeometry.attributes.position.array[
-            leftSideEffectParticleIndex + 1
-          ]
-      }
-
-      animatingParticles.push(rightSideParticle, leftSideParticle)
     }
   }
 
@@ -186,13 +192,19 @@ const tick = () => {
     const i3 = index * 3
 
     const x = particleGeometry.attributes.position.array[i3]
-    const animateYValue = Math.sin(elapsedTime + x + count * 0.2) * 5.0
+    const animateYValue = Math.sin(elapsedTime + x + count * 0.2) * 4.0
     particleGeometry.attributes.position.array[i3 + 1] = animateYValue
 
     particleGeometry.attributes.position.needsUpdate = true
 
-    if (parseFloat(animateYValue.toFixed(1)) === 0) {
-      particleGeometry.attributes.position.array[i3 + 1] = 0 // set back to initial value
+    const initalTestValue = parseFloat(
+      animatingParticles[i].yInitalValue.toFixed(1)
+    )
+    const animatingTestValue = parseFloat(animateYValue.toFixed(1))
+
+    if (initalTestValue === animatingTestValue) {
+      particleGeometry.attributes.position.array[i3 + 1] =
+        animatingParticles[i].yInitalValue
       particleGeometry.attributes.position.needsUpdate = true
 
       animatingParticles.splice(i, 1)
