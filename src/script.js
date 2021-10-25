@@ -146,34 +146,39 @@ const tick = () => {
   raycaster.setFromCamera(mouse, camera)
 
   // Update Particles
-
-  //   for (let i = 0; i < count; i++) {
-  //     const i3 = i * 3
-  //     const x = particleGeometry.attributes.position.array[i3]
-  //     particleGeometry.attributes.position.array[i3 + 1] = Math.cos(
-  //       elapsedTime + x * 0.2
-  //     )
-  //   }
-  //   particleGeometry.attributes.position.needsUpdate = true
-
   const intersections = raycaster.intersectObjects([particles], false)
   intersection = intersections.length > 0 ? intersections[0] : null
 
   if (intersection) {
+    const i3 = intersection.index * 3
     animatingParticles.push({
       index: intersection.index,
-      y_value:
-        particleGeometry.attributes.position.array[intersection.index * 3 + 1]
+      yInitalValue: particleGeometry.attributes.position.array[i3 + 1]
     })
 
-    // const index = intersection.index
-    // const i3 = index * 3
-    // const y = particleGeometry.attributes.position.array[i3 + 1]
-    // particleGeometry.attributes.position.array[i3 + 1] = Math.cos(
-    //   elapsedTime + y * 0.2
-    // )
+    const disruptRadius = randomIntFromInterval(1, 5)
 
-    // particleGeometry.attributes.position.needsUpdate = true
+    for (let i = 0; i < disruptRadius; i++) {
+      const rightSideEffectParticleIndex = (intersection.index + i) * 3
+      const leftSideEffectParticleIndex = (intersection.index - i) * 3
+
+      const rightSideParticle = {
+        index: intersection.index + i,
+        yInitalValue:
+          particleGeometry.attributes.position.array[
+            rightSideEffectParticleIndex + 1
+          ]
+      }
+      const leftSideParticle = {
+        index: intersection.index - i,
+        yInitalValue:
+          particleGeometry.attributes.position.array[
+            leftSideEffectParticleIndex + 1
+          ]
+      }
+
+      animatingParticles.push(rightSideParticle, leftSideParticle)
+    }
   }
 
   for (let i = 0; i < animatingParticles.length; i++) {
@@ -181,11 +186,18 @@ const tick = () => {
     const i3 = index * 3
 
     const x = particleGeometry.attributes.position.array[i3]
-    particleGeometry.attributes.position.array[i3 + 1] = Math.cos(
-      elapsedTime + x * 0.2
-    )
+    const animateYValue = Math.cos(elapsedTime + x * 0.2)
+    particleGeometry.attributes.position.array[i3 + 1] = animateYValue
+
+    particleGeometry.attributes.position.needsUpdate = true
+
+    if (parseFloat(animateYValue.toFixed(1)) === 0) {
+      particleGeometry.attributes.position.array[i3 + 1] = 0 // set back to initial value
+      particleGeometry.attributes.position.needsUpdate = true
+
+      animatingParticles.splice(i, 1)
+    }
   }
-  particleGeometry.attributes.position.needsUpdate = true
 
   // Update controls
   controls.update()
@@ -198,3 +210,10 @@ const tick = () => {
 }
 
 tick()
+
+/* Utils */
+
+function randomIntFromInterval (min, max) {
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1) + min)
+}
