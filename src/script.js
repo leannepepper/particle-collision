@@ -2,6 +2,7 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
+import CANNON from 'cannon'
 
 /**
  * Base
@@ -16,6 +17,23 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+const animatingParticles = []
+
+/**
+ * Physics
+ */
+// const world = new CANNON.World()
+// world.gravity.set(0, -9.82, 0)
+
+// const particleShape = new CANNON.Particle()
+
+// const particleBody = new CANNON.Body({
+//   mass: 0,
+//   position: new CANNON.Vec3(1, 0, 0),
+//   shape: particleShape
+// })
+
+// world.addBody(particleBody)
 
 /**
  * Geometry
@@ -41,7 +59,7 @@ particleGeometry.setAttribute(
  * Material
  */
 const particleMaterial = new THREE.PointsMaterial({
-  size: 1.3,
+  size: 1.0,
   sizeAttenuation: true,
   color: 0xff00ff
 })
@@ -105,8 +123,8 @@ function onMouseMove (event) {
 window.addEventListener('mousemove', onMouseMove)
 
 // Controls
-// const controls = new OrbitControls(camera, canvas)
-// controls.enableDamping = true
+const controls = new OrbitControls(camera, canvas)
+controls.enableDamping = true
 
 /**
  * Renderer
@@ -142,16 +160,35 @@ const tick = () => {
   intersection = intersections.length > 0 ? intersections[0] : null
 
   if (intersection) {
-    const index = intersection.index
-    const i3 = index * 3
-    const y = particleGeometry.attributes.position.array[i3 + 1]
-    particleGeometry.attributes.position.array[i3 + 1] = y + 10
+    animatingParticles.push({
+      index: intersection.index,
+      y_value:
+        particleGeometry.attributes.position.array[intersection.index * 3 + 1]
+    })
 
-    particleGeometry.attributes.position.needsUpdate = true
+    // const index = intersection.index
+    // const i3 = index * 3
+    // const y = particleGeometry.attributes.position.array[i3 + 1]
+    // particleGeometry.attributes.position.array[i3 + 1] = Math.cos(
+    //   elapsedTime + y * 0.2
+    // )
+
+    // particleGeometry.attributes.position.needsUpdate = true
   }
 
+  for (let i = 0; i < animatingParticles.length; i++) {
+    const index = animatingParticles[i].index
+    const i3 = index * 3
+
+    const x = particleGeometry.attributes.position.array[i3]
+    particleGeometry.attributes.position.array[i3 + 1] = Math.cos(
+      elapsedTime + x * 0.2
+    )
+  }
+  particleGeometry.attributes.position.needsUpdate = true
+
   // Update controls
-  //   controls.update()
+  controls.update()
 
   // Render
   renderer.render(scene, camera)
