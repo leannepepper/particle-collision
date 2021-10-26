@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import CANNON from 'cannon'
+import { Line } from './Line'
 
 /**
  * Base
@@ -13,32 +14,6 @@ const threshold = 0.1
 let intersection = null
 const lines = []
 
-const line1 = {
-  count: 50,
-  size: 0.5,
-  color: 0xff00ff,
-  mesh: null,
-  position: new THREE.Vector3(-20, 0, 0)
-}
-
-const line2 = {
-  count: 50,
-  size: 0.2,
-  color: 0xffff00,
-  mesh: null,
-  position: new THREE.Vector3(-30, 0, 0)
-}
-
-const line3 = {
-  count: 50,
-  size: 0.2,
-  color: 0x00ffff,
-  mesh: null,
-  position: new THREE.Vector3(-25, 1, 0)
-}
-
-lines.push(line1, line2, line3)
-
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
@@ -46,43 +21,34 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 const animatingParticles = []
 
-/**
- * Geometry
- */
-const particleGeometry = new THREE.BufferGeometry()
+const line1 = new Line(
+  50,
+  1.4,
+  0xffff00,
+  null,
+  new THREE.Vector3(-20, 0, 0)
+).createParticleLine()
 
-const createParticleLine = (count, size, color) => {
-  const positions = new Float32Array(count * 3)
+const line2 = new Line(
+  50,
+  0.4,
+  0xffff00,
+  null,
+  new THREE.Vector3(-30, 0, 0)
+).createParticleLine()
 
-  for (let i = 0; i < count; i++) {
-    const i3 = i * 3
-    positions[i3] = i
-    positions[i3 + 1] = Math.sin(i * 0.2) * 2.0
-    positions[i3 + 2] = 0
-  }
+const line3 = new Line(
+  50,
+  0.2,
+  0xffff00,
+  null,
+  new THREE.Vector3(-25, 0, 0)
+).createParticleLine()
 
-  particleGeometry.setAttribute(
-    'position',
-    new THREE.BufferAttribute(positions, 3)
-  )
-
-  const particleMaterial = new THREE.PointsMaterial({
-    color,
-    size
-  })
-
-  const particles = new THREE.Points(particleGeometry, particleMaterial)
-  return particles
-}
+lines.push(line1, line2, line3)
 
 lines.forEach(line => {
-  const particles = createParticleLine(line.count, line.size, line.color)
-  particles.position.x = line.position.x
-  particles.position.y = line.position.y
-
-  // add mesh to line obj
-  line.mesh = particles
-  scene.add(particles)
+  scene.add(line)
 })
 
 /**
@@ -153,26 +119,29 @@ renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 function animateLineParticles (line, elapsedTime) {
-  const intersections = raycaster.intersectObjects([line.mesh], false)
+  const count = 50 // temp constant
+  const intersections = raycaster.intersectObjects([line], false)
   intersection = intersections.length > 0 ? intersections[0] : null
-
   // Find Particles that should animate
   if (intersection) {
+    // console.log(intersection)
+
     const i3 = intersection.index * 3
     animatingParticles.push({
       index: intersection.index,
-      yInitalValue: particleGeometry.attributes.position.array[i3 + 1]
+      yInitalValue:
+        intersection.object.geometry.attributes.position.array[i3 + 1]
     })
 
     const disruptRadius = randomIntFromInterval(1, 5)
 
     for (let i = 0; i < disruptRadius; i++) {
       const rightSideEffectParticleIndex = (intersection.index + i) * 3
-      if (rightSideEffectParticleIndex <= line.count) {
+      if (rightSideEffectParticleIndex <= count) {
         const rightSideParticle = {
           index: intersection.index + i,
           yInitalValue:
-            particleGeometry.attributes.position.array[
+            intersection.object.geometry.attributes.position.array[
               rightSideEffectParticleIndex + 1
             ]
         }
@@ -184,7 +153,7 @@ function animateLineParticles (line, elapsedTime) {
         const leftSideParticle = {
           index: intersection.index - i,
           yInitalValue:
-            particleGeometry.attributes.position.array[
+            intersection.object.geometry.attributes.position.array[
               leftSideEffectParticleIndex + 1
             ]
         }
@@ -194,15 +163,18 @@ function animateLineParticles (line, elapsedTime) {
   }
 
   // Animate Particles
+  if (!intersection) return
   for (let i = 0; i < animatingParticles.length; i++) {
     const index = animatingParticles[i].index
     const i3 = index * 3
 
-    const x = particleGeometry.attributes.position.array[i3]
-    const animateYValue = Math.sin(elapsedTime + x + line.count * 0.2) * 4.0
-    particleGeometry.attributes.position.array[i3 + 1] = animateYValue
+    const x = intersection.object.geometry.attributes.position.array[i3]
+    const animateYValue = Math.sin(elapsedTime + x + count * 0.2) * 4.0
+    intersection.object.geometry.attributes.position.array[
+      i3 + 1
+    ] = animateYValue
 
-    particleGeometry.attributes.position.needsUpdate = true
+    intersection.object.geometry.attributes.position.needsUpdate = true
 
     const initalTestValue = parseFloat(
       animatingParticles[i].yInitalValue.toFixed(1)
@@ -210,9 +182,9 @@ function animateLineParticles (line, elapsedTime) {
     const animatingTestValue = parseFloat(animateYValue.toFixed(1))
 
     if (initalTestValue === animatingTestValue) {
-      particleGeometry.attributes.position.array[i3 + 1] =
+      intersection.object.geometry.attributes.position.array[i3 + 1] =
         animatingParticles[i].yInitalValue
-      particleGeometry.attributes.position.needsUpdate = true
+      intersection.object.geometry.attributes.position.needsUpdate = true
 
       animatingParticles.splice(i, 1)
     }
