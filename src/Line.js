@@ -21,12 +21,17 @@ export class Line {
   }
 
   createParticleLine = () => {
+    const spread = 2.5
+    const amplitude = 0.2
+    const frequency = 0.3
+
     var positions = new Float32Array(this.count * 3)
 
     for (let i = 0; i < this.count; i++) {
       const i3 = i * 3
-      positions[i3] = i * 0.04
-      positions[i3 + 1] = Math.sin(i * 0.2) * 0.04
+      positions[i3] = i * spread * 0.04
+      positions[i3 + 1] =
+        Math.cos(i * frequency) * amplitude + (0.5 - positions[i3] * 0.3)
       positions[i3 + 2] = 0
     }
 

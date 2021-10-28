@@ -22,28 +22,28 @@ const scene = new THREE.Scene()
 const animatingParticles = []
 
 const line1 = new Line(
-  50,
-  0.15,
+  30,
+  0.12,
   0xffff00,
   null,
-  new THREE.Vector3(-0.9, 0, 0)
+  new THREE.Vector3(-1.4, 0, 0)
 ).createParticleLine()
 
-const line2 = new Line(
-  50,
-  0.4,
-  0xffff00,
-  null,
-  new THREE.Vector3(-30, 0, 0)
-).createParticleLine()
+// const line2 = new Line(
+//   50,
+//   0.4,
+//   0xffff00,
+//   null,
+//   new THREE.Vector3(-30, 0, 0)
+// ).createParticleLine()
 
-const line3 = new Line(
-  50,
-  0.2,
-  0xffff00,
-  null,
-  new THREE.Vector3(-25, 0, 0)
-).createParticleLine()
+// const line3 = new Line(
+//   50,
+//   0.2,
+//   0xffff00,
+//   null,
+//   new THREE.Vector3(-25, 0, 0)
+// ).createParticleLine()
 
 lines.push(line1)
 
