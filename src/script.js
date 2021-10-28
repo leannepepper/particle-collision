@@ -10,7 +10,7 @@ import { Line } from './Line'
  */
 // Debug
 const gui = new dat.GUI()
-const threshold = 0.1
+const threshold = 0.02
 let intersection = null
 const lines = []
 
@@ -23,10 +23,10 @@ const animatingParticles = []
 
 const line1 = new Line(
   50,
-  1.5,
+  0.15,
   0xffff00,
   null,
-  new THREE.Vector3(-20, 0, 0)
+  new THREE.Vector3(-0.9, 0, 0)
 ).createParticleLine()
 
 const line2 = new Line(
@@ -71,7 +71,7 @@ const camera = new THREE.PerspectiveCamera(
 )
 camera.position.x = 0
 camera.position.y = 0
-camera.position.z = 40
+camera.position.z = 1
 
 scene.add(camera)
 
@@ -101,8 +101,9 @@ window.addEventListener('resize', () => {
 let isMoving = false
 
 function onMouseUp (event) {
-  controls.enabled = true
   isMoving = false
+  // controls.enabled = true
+
   //on mouseup release line and animate
 }
 

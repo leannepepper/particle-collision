@@ -20,18 +20,13 @@ export class Line {
     this.position = position
   }
 
-  // Method
-  //   calcArea () {
-  //     return this.height * this.width
-  //   }
-
   createParticleLine = () => {
     var positions = new Float32Array(this.count * 3)
 
     for (let i = 0; i < this.count; i++) {
       const i3 = i * 3
-      positions[i3] = i
-      positions[i3 + 1] = Math.sin(i * 0.2) * 2.0
+      positions[i3] = i * 0.04
+      positions[i3 + 1] = Math.sin(i * 0.2) * 0.04
       positions[i3 + 2] = 0
     }
 
