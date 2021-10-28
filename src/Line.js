@@ -54,6 +54,7 @@ export class Line {
     particles.position.x = this.position.x
     particles.position.y = this.position.y
 
+    this.mesh = particles
     return particles
   }
 }

@@ -23,7 +23,7 @@ const animatingParticles = []
 
 const line1 = new Line(
   50,
-  1.4,
+  1.5,
   0xffff00,
   null,
   new THREE.Vector3(-20, 0, 0)
@@ -45,7 +45,7 @@ const line3 = new Line(
   new THREE.Vector3(-25, 0, 0)
 ).createParticleLine()
 
-lines.push(line1, line2, line3)
+lines.push(line1)
 
 lines.forEach(line => {
   scene.add(line)
@@ -82,7 +82,7 @@ scene.add(camera)
 const raycaster = new THREE.Raycaster()
 raycaster.params.Points.threshold = threshold
 
-let mouse = new THREE.Vector2(0, 0)
+let mouse = new THREE.Vector3(0, 0, 0)
 
 window.addEventListener('resize', () => {
   // Update sizes
@@ -98,12 +98,54 @@ window.addEventListener('resize', () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
+let isMoving = false
+
+function onMouseUp (event) {
+  controls.enabled = true
+  isMoving = false
+  //on mouseup release line and animate
+}
+
+function onMouseDown (event) {
+  raycaster.setFromCamera(mouse, camera)
+
+  const intersections = raycaster.intersectObjects(
+    lines.map(line => line),
+    false
+  )
+  intersection = intersections.length > 0 ? intersections[0] : null // Might need to change this for multiple lines
+  console.log(intersections)
+
+  if (intersection) {
+    controls.enabled = false
+    isMoving = true
+  }
+}
+
 function onMouseMove (event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+  mouse.x = (event.clientX / sizes.width) * 2 - 1
+  mouse.y = -(event.clientY / sizes.height) * 2 + 1
+  // mouse.z = 0
+
+  // // convert screen coordinates to threejs world position
+  // // https://stackoverflow.com/questions/13055214/mouse-canvas-x-y-to-three-js-world-x-y-z
+
+  // var vector = new THREE.Vector3(mouse.x, mouse.y, 0)
+  // vector.unproject(camera)
+  // var dir = vector.sub(camera.position).normalize()
+  // var distance = -camera.position.z / dir.z
+  // var pos = camera.position.clone().add(dir.multiplyScalar(distance))
+
+  // mouse = pos
+
+  if (isMoving) {
+    moveLineParticles()
+  }
 }
 
 window.addEventListener('mousemove', onMouseMove)
+window.addEventListener('mousedown', onMouseDown)
+window.addEventListener('mouseup', onMouseUp)
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
@@ -118,14 +160,21 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
+function moveLineParticles () {
+  const i3 = intersection.index * 3
+  intersection.object.geometry.attributes.position.array[i3 + 1] = mouse.y
+
+  intersection.object.geometry.attributes.position.needsUpdate = true
+  console.log('hit')
+}
+
 function animateLineParticles (line, elapsedTime) {
   const count = 50 // temp constant
-  const intersections = raycaster.intersectObjects([line], false)
-  intersection = intersections.length > 0 ? intersections[0] : null
+  // const intersections = raycaster.intersectObjects([line], false)
+  // intersection = intersections.length > 0 ? intersections[0] : null
   // Find Particles that should animate
-  if (intersection) {
-    // console.log(intersection)
 
+  if (intersection) {
     const i3 = intersection.index * 3
     animatingParticles.push({
       index: intersection.index,
@@ -179,6 +228,7 @@ function animateLineParticles (line, elapsedTime) {
     const initalTestValue = parseFloat(
       animatingParticles[i].yInitalValue.toFixed(1)
     )
+
     const animatingTestValue = parseFloat(animateYValue.toFixed(1))
 
     if (initalTestValue === animatingTestValue) {
@@ -198,9 +248,6 @@ const clock = new THREE.Clock()
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime()
-  raycaster.setFromCamera(mouse, camera)
-
-  lines.forEach(line => animateLineParticles(line, elapsedTime))
 
   // Update controls
   controls.update()
