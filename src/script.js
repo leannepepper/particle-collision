@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import CANNON from 'cannon'
-import { Line } from './Line'
+import { createParticleLine } from './Line'
 
 /**
  * Base
@@ -18,38 +18,64 @@ const lines = []
 const canvas = document.querySelector('canvas.webgl')
 
 // Scene
-const scene = new THREE.Scene()
+export const scene = new THREE.Scene()
 const animatingParticles = []
 
-const line1 = new Line(
-  30,
-  0.12,
-  0xffff00,
-  null,
-  new THREE.Vector3(-1.4, 0, 0)
-).createParticleLine()
-
-// const line2 = new Line(
-//   50,
-//   0.4,
+// const line1 = createParticleLine(
+//   30,
+//   0.08,
 //   0xffff00,
 //   null,
-//   new THREE.Vector3(-30, 0, 0)
-// ).createParticleLine()
+//   new THREE.Vector3(-1.4, 0, 0),
+//   {
+//     spread: 2.5,
+//     amplitude: 0.18,
+//     frequency: 0.3
+//   }
+// )
 
-// const line3 = new Line(
-//   50,
-//   0.2,
+// const line2 = createParticleLine(
+//   30,
+//   0.04,
 //   0xffff00,
 //   null,
-//   new THREE.Vector3(-25, 0, 0)
-// ).createParticleLine()
+//   new THREE.Vector3(-1.4, 0, 0),
+//   {
+//     spread: 2.4,
+//     amplitude: 0.3,
+//     frequency: 0.3
+//   }
+// )
 
-lines.push(line1)
+// const line3 = createParticleLine(
+//   30,
+//   0.04,
+//   0xffff00,
+//   null,
+//   new THREE.Vector3(-1.4, 0, 0),
+//   {
+//     spread: 2.4,
+//     amplitude: 0.34,
+//     frequency: 0.3
+//   }
+// )
 
-lines.forEach(line => {
-  scene.add(line)
-})
+for (let i = 0; i < 50; i++) {
+  const line = createParticleLine(
+    40,
+    0.03 * Math.random(),
+    0xffff00,
+    null,
+    new THREE.Vector3(-1.1, 0, 0),
+    {
+      spread: 1.4,
+      amplitude: i * 0.01 * Math.random(),
+      frequency: 0.3
+    }
+  )
+
+  lines.push(line)
+}
 
 /**
  * Sizes
