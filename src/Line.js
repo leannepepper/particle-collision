@@ -16,7 +16,7 @@ export const createParticleLine = (
   waveVariables
 ) => {
   const particleGeometry = new THREE.BufferGeometry()
-
+  count = Math.abs(count)
   const spread = waveVariables.spread
   const amplitude = waveVariables.amplitude
   const frequency = waveVariables.frequency
@@ -25,9 +25,9 @@ export const createParticleLine = (
 
   for (let i = 0; i < count; i++) {
     const i3 = i * 3
-    positions[i3] = i * spread * 0.04
+    positions[i3] = i3 * 0.02 * spread
     positions[i3 + 1] =
-      Math.cos(i * frequency) * amplitude + (0.5 - positions[i3] * 0.3) // as x increases y decreases
+      Math.cos(i * frequency) * amplitude + (0.5 - positions[i3] * 0.25) // as x increases y decreases
     positions[i3 + 2] = 0
   }
 

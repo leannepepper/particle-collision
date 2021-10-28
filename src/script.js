@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import CANNON from 'cannon'
+import SimplexNoise from 'simplex-noise'
 import { createParticleLine } from './Line'
 
 /**
@@ -11,6 +12,7 @@ import { createParticleLine } from './Line'
 // Debug
 const gui = new dat.GUI()
 const threshold = 0.02
+const noise = new SimplexNoise('seed')
 let intersection = null
 const lines = []
 
@@ -60,17 +62,19 @@ const animatingParticles = []
 //   }
 // )
 
-for (let i = 0; i < 50; i++) {
+for (let i = 0; i < 25; i++) {
+  const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 0.5))
+  const count = Math.round(40 / noiseValue)
   const line = createParticleLine(
-    40,
-    0.03 * Math.random(),
+    count,
+    0.06 * noiseValue,
     0xffff00,
     null,
     new THREE.Vector3(-1.1, 0, 0),
     {
-      spread: 1.4,
-      amplitude: i * 0.01 * Math.random(),
-      frequency: 0.3
+      spread: noiseValue,
+      amplitude: 0.1 * noiseValue,
+      frequency: 0.3 * noiseValue
     }
   )
 
