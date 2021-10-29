@@ -23,57 +23,18 @@ const canvas = document.querySelector('canvas.webgl')
 export const scene = new THREE.Scene()
 const animatingParticles = []
 
-// const line1 = createParticleLine(
-//   30,
-//   0.08,
-//   0xffff00,
-//   null,
-//   new THREE.Vector3(-1.4, 0, 0),
-//   {
-//     spread: 2.5,
-//     amplitude: 0.18,
-//     frequency: 0.3
-//   }
-// )
-
-// const line2 = createParticleLine(
-//   30,
-//   0.04,
-//   0xffff00,
-//   null,
-//   new THREE.Vector3(-1.4, 0, 0),
-//   {
-//     spread: 2.4,
-//     amplitude: 0.3,
-//     frequency: 0.3
-//   }
-// )
-
-// const line3 = createParticleLine(
-//   30,
-//   0.04,
-//   0xffff00,
-//   null,
-//   new THREE.Vector3(-1.4, 0, 0),
-//   {
-//     spread: 2.4,
-//     amplitude: 0.34,
-//     frequency: 0.3
-//   }
-// )
-
 for (let i = 0; i < 25; i++) {
   const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 0.5))
-  const count = Math.round(40 / noiseValue)
+  const count = Math.round(45 / noiseValue)
   const line = createParticleLine(
     count,
     0.06 * noiseValue,
     0xffff00,
     null,
-    new THREE.Vector3(-1.1, 0, 0),
+    new THREE.Vector3(-1.3, 0, 0),
     {
       spread: noiseValue,
-      amplitude: 0.1 * noiseValue,
+      amplitude: noiseValue,
       frequency: 0.3 * noiseValue
     }
   )
@@ -99,8 +60,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   2000
 )
-camera.position.x = 0
-camera.position.y = 0
+
 camera.position.z = 1
 
 scene.add(camera)
