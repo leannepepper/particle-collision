@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import CANNON from 'cannon'
 import SimplexNoise from 'simplex-noise'
-import { createParticleLine } from './Line'
+import { Line } from './Line'
 
 /**
  * Base
@@ -23,14 +23,15 @@ const canvas = document.querySelector('canvas.webgl')
 export const scene = new THREE.Scene()
 const animatingParticles = []
 
-for (let i = 0; i < 25; i++) {
-  const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 0.5))
+for (let i = 0; i < 10; i++) {
+  const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 5.5))
   const count = Math.round(45 / noiseValue)
-  const line = createParticleLine(
+  const particleLine = new Line()
+
+  particleLine.createParticleLine(
     count,
     0.06 * noiseValue,
     0xffff00,
-    null,
     new THREE.Vector3(-1.3, 0, 0),
     {
       spread: noiseValue,
@@ -39,7 +40,7 @@ for (let i = 0; i < 25; i++) {
     }
   )
 
-  lines.push(line)
+  lines.push(particleLine)
 }
 
 /**
@@ -101,7 +102,7 @@ function onMouseDown (event) {
   raycaster.setFromCamera(mouse, camera)
 
   const intersections = raycaster.intersectObjects(
-    lines.map(line => line),
+    lines.map(line => line.mesh),
     false
   )
   intersection = intersections.length > 0 ? intersections[0] : null // Might need to change this for multiple lines
@@ -153,84 +154,83 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 function moveLineParticles () {
   const i3 = intersection.index * 3
+
   intersection.object.geometry.attributes.position.array[i3 + 1] = mouse.y
-
   intersection.object.geometry.attributes.position.needsUpdate = true
-  console.log('hit')
 }
 
-function animateLineParticles (line, elapsedTime) {
-  const count = 50 // temp constant
-  // const intersections = raycaster.intersectObjects([line], false)
-  // intersection = intersections.length > 0 ? intersections[0] : null
-  // Find Particles that should animate
+// function animateLineParticles (line, elapsedTime) {
+//   const count = 50 // temp constant
+//   // const intersections = raycaster.intersectObjects([line], false)
+//   // intersection = intersections.length > 0 ? intersections[0] : null
+//   // Find Particles that should animate
 
-  if (intersection) {
-    const i3 = intersection.index * 3
-    animatingParticles.push({
-      index: intersection.index,
-      yInitalValue:
-        intersection.object.geometry.attributes.position.array[i3 + 1]
-    })
+//   if (intersection) {
+//     const i3 = intersection.index * 3
+//     animatingParticles.push({
+//       index: intersection.index,
+//       yInitalValue:
+//         intersection.object.geometry.attributes.position.array[i3 + 1]
+//     })
 
-    const disruptRadius = randomIntFromInterval(1, 5)
+//     const disruptRadius = randomIntFromInterval(1, 5)
 
-    for (let i = 0; i < disruptRadius; i++) {
-      const rightSideEffectParticleIndex = (intersection.index + i) * 3
-      if (rightSideEffectParticleIndex <= count) {
-        const rightSideParticle = {
-          index: intersection.index + i,
-          yInitalValue:
-            intersection.object.geometry.attributes.position.array[
-              rightSideEffectParticleIndex + 1
-            ]
-        }
-        animatingParticles.push(rightSideParticle)
-      }
+//     for (let i = 0; i < disruptRadius; i++) {
+//       const rightSideEffectParticleIndex = (intersection.index + i) * 3
+//       if (rightSideEffectParticleIndex <= count) {
+//         const rightSideParticle = {
+//           index: intersection.index + i,
+//           yInitalValue:
+//             intersection.object.geometry.attributes.position.array[
+//               rightSideEffectParticleIndex + 1
+//             ]
+//         }
+//         animatingParticles.push(rightSideParticle)
+//       }
 
-      const leftSideEffectParticleIndex = (intersection.index - i) * 3
-      if (leftSideEffectParticleIndex >= 0) {
-        const leftSideParticle = {
-          index: intersection.index - i,
-          yInitalValue:
-            intersection.object.geometry.attributes.position.array[
-              leftSideEffectParticleIndex + 1
-            ]
-        }
-        animatingParticles.push(leftSideParticle)
-      }
-    }
-  }
+//       const leftSideEffectParticleIndex = (intersection.index - i) * 3
+//       if (leftSideEffectParticleIndex >= 0) {
+//         const leftSideParticle = {
+//           index: intersection.index - i,
+//           yInitalValue:
+//             intersection.object.geometry.attributes.position.array[
+//               leftSideEffectParticleIndex + 1
+//             ]
+//         }
+//         animatingParticles.push(leftSideParticle)
+//       }
+//     }
+//   }
 
-  // Animate Particles
-  if (!intersection) return
-  for (let i = 0; i < animatingParticles.length; i++) {
-    const index = animatingParticles[i].index
-    const i3 = index * 3
+//   // Animate Particles
+//   if (!intersection) return
+//   for (let i = 0; i < animatingParticles.length; i++) {
+//     const index = animatingParticles[i].index
+//     const i3 = index * 3
 
-    const x = intersection.object.geometry.attributes.position.array[i3]
-    const animateYValue = Math.sin(elapsedTime + x + count * 0.2) * 4.0
-    intersection.object.geometry.attributes.position.array[
-      i3 + 1
-    ] = animateYValue
+//     const x = intersection.object.geometry.attributes.position.array[i3]
+//     const animateYValue = Math.sin(elapsedTime + x + count * 0.2) * 4.0
+//     intersection.object.geometry.attributes.position.array[
+//       i3 + 1
+//     ] = animateYValue
 
-    intersection.object.geometry.attributes.position.needsUpdate = true
+//     intersection.object.geometry.attributes.position.needsUpdate = true
 
-    const initalTestValue = parseFloat(
-      animatingParticles[i].yInitalValue.toFixed(1)
-    )
+//     const initalTestValue = parseFloat(
+//       animatingParticles[i].yInitalValue.toFixed(1)
+//     )
 
-    const animatingTestValue = parseFloat(animateYValue.toFixed(1))
+//     const animatingTestValue = parseFloat(animateYValue.toFixed(1))
 
-    if (initalTestValue === animatingTestValue) {
-      intersection.object.geometry.attributes.position.array[i3 + 1] =
-        animatingParticles[i].yInitalValue
-      intersection.object.geometry.attributes.position.needsUpdate = true
+//     if (initalTestValue === animatingTestValue) {
+//       intersection.object.geometry.attributes.position.array[i3 + 1] =
+//         animatingParticles[i].yInitalValue
+//       intersection.object.geometry.attributes.position.needsUpdate = true
 
-      animatingParticles.splice(i, 1)
-    }
-  }
-}
+//       animatingParticles.splice(i, 1)
+//     }
+//   }
+// }
 
 /**
  * Animate

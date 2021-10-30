@@ -7,50 +7,53 @@ import { scene } from './script'
 const textureLoader = new THREE.TextureLoader()
 const particleTexture = textureLoader.load('/textures/particle.png')
 
-export const createParticleLine = (
-  count,
-  size,
-  color,
-  mesh,
-  position,
-  waveVariables
-) => {
-  const particleGeometry = new THREE.BufferGeometry()
-  count = Math.abs(count)
-  const spread = waveVariables.spread
-  const amplitude = waveVariables.amplitude
-  const frequency = waveVariables.frequency
-
-  var positions = new Float32Array(count * 3)
-
-  for (let i = 0; i < count; i++) {
-    const i3 = i * 3
-    positions[i3] = i3 * 0.02 * spread
-    positions[i3 + 1] =
-      Math.cos(i * frequency) * amplitude + (0.5 - positions[i3] * 0.25) // as x increases y decreases
-    positions[i3 + 2] = 0
+export class Line {
+  constructor () {
+    this.mesh = null
   }
 
-  particleGeometry.setAttribute(
-    'position',
-    new THREE.BufferAttribute(positions, 3)
-  )
+  createParticleLine = (count, size, color, position, waveVariables) => {
+    const particleGeometry = new THREE.BufferGeometry()
+    count = Math.abs(count)
+    const spread = waveVariables.spread
+    const amplitude = waveVariables.amplitude
+    const frequency = waveVariables.frequency
 
-  const particleMaterial = new THREE.PointsMaterial({
-    color: color,
-    size: size,
-    sizeAttenuation: true
-  })
+    var positions = new Float32Array(count * 3)
 
-  particleMaterial.map = particleTexture
-  particleMaterial.depthWrite = false
-  particleMaterial.blending = THREE.AdditiveBlending
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3
+      positions[i3] = i3 * 0.02 * spread
+      positions[i3 + 1] =
+        Math.cos(i * frequency) * amplitude + (0.5 - positions[i3] * 0.25) // as x increases y decreases
+      positions[i3 + 2] = 0
+    }
 
-  const particles = new THREE.Points(particleGeometry, particleMaterial)
-  particles.position.x = position.x
-  particles.position.y = position.y
+    particleGeometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(positions, 3)
+    )
 
-  mesh = particles
-  scene.add(particles)
-  return particles
+    const particleMaterial = new THREE.PointsMaterial({
+      color: color,
+      size: size,
+      sizeAttenuation: true
+    })
+
+    particleMaterial.map = particleTexture
+    particleMaterial.depthWrite = false
+    particleMaterial.blending = THREE.AdditiveBlending
+
+    const particles = new THREE.Points(particleGeometry, particleMaterial)
+    particles.position.x = position.x
+    particles.position.y = position.y
+
+    this.mesh = particles
+
+    scene.add(particles)
+
+    return particles
+  }
+
+  animateParticleLine () {}
 }
