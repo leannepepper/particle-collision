@@ -55,5 +55,8 @@ export class Line {
     return particles
   }
 
-  animateParticleLine () {}
+  particleLineDrag () {
+    console.log('hit')
+    // calculate a delta distance and apply that delta to a radius of nearby points, the larger the delta, the larger the radius
+  }
 }

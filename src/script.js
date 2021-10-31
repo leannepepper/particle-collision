@@ -13,17 +13,18 @@ import { Line } from './Line'
 const gui = new dat.GUI()
 const threshold = 0.02
 const noise = new SimplexNoise('seed')
-let intersection = null
+let intersections = []
 const lines = []
+let initialMouse = new THREE.Vector3()
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 export const scene = new THREE.Scene()
-const animatingParticles = []
 
-for (let i = 0; i < 10; i++) {
+// Create Lines
+for (let i = 0; i < 2; i++) {
   const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 5.5))
   const count = Math.round(45 / noiseValue)
   const particleLine = new Line()
@@ -95,43 +96,48 @@ function onMouseUp (event) {
   isMoving = false
   // controls.enabled = true
 
-  //on mouseup release line and animate
+  //on mouseup release line and animate and clear initial mouse
 }
 
 function onMouseDown (event) {
   raycaster.setFromCamera(mouse, camera)
 
-  const intersections = raycaster.intersectObjects(
+  intersections = raycaster.intersectObjects(
     lines.map(line => line.mesh),
     false
   )
-  intersection = intersections.length > 0 ? intersections[0] : null // Might need to change this for multiple lines
-  console.log(intersections)
 
-  if (intersection) {
+  if (intersections.length > 0) {
     controls.enabled = false
     isMoving = true
+    initialMouse.copy(mouse)
   }
 }
 
 function onMouseMove (event) {
   mouse.x = (event.clientX / sizes.width) * 2 - 1
   mouse.y = -(event.clientY / sizes.height) * 2 + 1
-  // mouse.z = 0
-
-  // // convert screen coordinates to threejs world position
-  // // https://stackoverflow.com/questions/13055214/mouse-canvas-x-y-to-three-js-world-x-y-z
-
-  // var vector = new THREE.Vector3(mouse.x, mouse.y, 0)
-  // vector.unproject(camera)
-  // var dir = vector.sub(camera.position).normalize()
-  // var distance = -camera.position.z / dir.z
-  // var pos = camera.position.clone().add(dir.multiplyScalar(distance))
-
-  // mouse = pos
 
   if (isMoving) {
-    moveLineParticles()
+    // Reduce the intersections down to include one unique
+    // TODO: refactor to use reduce
+    let uniqueLines = []
+    const array1 = []
+    for (let i = 0; i < intersections.length; i++) {
+      if (i === 0) {
+        array1.push(intersections[i])
+      } else {
+        const array2 = []
+        array1.forEach(item => {
+          if (item.object.uuid !== intersections[i].object.uuid) {
+            array2.push(intersections[i])
+          }
+        })
+        uniqueLines = array1.concat(array2)
+      }
+    }
+
+    moveLineParticles(uniqueLines)
   }
 }
 
@@ -152,85 +158,49 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
-function moveLineParticles () {
-  const i3 = intersection.index * 3
+function moveLineParticles (uniqueLines) {
+  // for each line take that particle and move it down by the mouse delta.
+  uniqueLines.forEach(line => {
+    const i3 = line.index * 3
+    const mouseDelta =
+      Math.abs(line.point.y) -
+      Math.abs(line.object.geometry.attributes.position.array[i3 + 1])
 
-  intersection.object.geometry.attributes.position.array[i3 + 1] = mouse.y
-  intersection.object.geometry.attributes.position.needsUpdate = true
+    console.log(
+      line.point.y,
+      line.object.geometry.attributes.position.array[i3 + 1],
+      mouseDelta
+    )
+    // Change the initial point
+    line.object.geometry.attributes.position.array[i3 + 1] = line.point.y
+
+    line.object.geometry.attributes.position.needsUpdate = true
+
+    dragParticleLine(line, mouseDelta)
+  })
 }
 
-// function animateLineParticles (line, elapsedTime) {
-//   const count = 50 // temp constant
-//   // const intersections = raycaster.intersectObjects([line], false)
-//   // intersection = intersections.length > 0 ? intersections[0] : null
-//   // Find Particles that should animate
+function dragParticleLine (line, delta) {
+  // the larger the delta, then larger the radius to move
 
-//   if (intersection) {
-//     const i3 = intersection.index * 3
-//     animatingParticles.push({
-//       index: intersection.index,
-//       yInitalValue:
-//         intersection.object.geometry.attributes.position.array[i3 + 1]
-//     })
+  const disruptRadius = randomIntFromInterval(5, 5)
+  const lineCount = line.object.geometry.attributes.position.array.length / 3
 
-//     const disruptRadius = randomIntFromInterval(1, 5)
+  for (let i = 0; i < disruptRadius; i++) {
+    const rightSideEffectParticleIndex = (line.index + i) * 3
+    const leftSideEffectParticleIndex = (line.index - i) * 3
 
-//     for (let i = 0; i < disruptRadius; i++) {
-//       const rightSideEffectParticleIndex = (intersection.index + i) * 3
-//       if (rightSideEffectParticleIndex <= count) {
-//         const rightSideParticle = {
-//           index: intersection.index + i,
-//           yInitalValue:
-//             intersection.object.geometry.attributes.position.array[
-//               rightSideEffectParticleIndex + 1
-//             ]
-//         }
-//         animatingParticles.push(rightSideParticle)
-//       }
+    line.object.geometry.attributes.position.array[
+      rightSideEffectParticleIndex + 1
+    ] = line.point.y
 
-//       const leftSideEffectParticleIndex = (intersection.index - i) * 3
-//       if (leftSideEffectParticleIndex >= 0) {
-//         const leftSideParticle = {
-//           index: intersection.index - i,
-//           yInitalValue:
-//             intersection.object.geometry.attributes.position.array[
-//               leftSideEffectParticleIndex + 1
-//             ]
-//         }
-//         animatingParticles.push(leftSideParticle)
-//       }
-//     }
-//   }
+    line.object.geometry.attributes.position.array[
+      leftSideEffectParticleIndex + 1
+    ] = line.point.y
+  }
 
-//   // Animate Particles
-//   if (!intersection) return
-//   for (let i = 0; i < animatingParticles.length; i++) {
-//     const index = animatingParticles[i].index
-//     const i3 = index * 3
-
-//     const x = intersection.object.geometry.attributes.position.array[i3]
-//     const animateYValue = Math.sin(elapsedTime + x + count * 0.2) * 4.0
-//     intersection.object.geometry.attributes.position.array[
-//       i3 + 1
-//     ] = animateYValue
-
-//     intersection.object.geometry.attributes.position.needsUpdate = true
-
-//     const initalTestValue = parseFloat(
-//       animatingParticles[i].yInitalValue.toFixed(1)
-//     )
-
-//     const animatingTestValue = parseFloat(animateYValue.toFixed(1))
-
-//     if (initalTestValue === animatingTestValue) {
-//       intersection.object.geometry.attributes.position.array[i3 + 1] =
-//         animatingParticles[i].yInitalValue
-//       intersection.object.geometry.attributes.position.needsUpdate = true
-
-//       animatingParticles.splice(i, 1)
-//     }
-//   }
-// }
+  line.object.geometry.attributes.position.needsUpdate = true
+}
 
 /**
  * Animate
