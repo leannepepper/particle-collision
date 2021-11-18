@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { scene } from './script'
+import { distance } from './collisionDetection'
 
 /**
  * Textures
@@ -10,6 +11,7 @@ const particleTexture = textureLoader.load('/textures/particle.png')
 export class Line {
   constructor () {
     this.mesh = null
+    this.size = null
   }
 
   createParticleLine = (count, size, color, position, waveVariables) => {
@@ -18,6 +20,7 @@ export class Line {
     const spread = waveVariables.spread
     const amplitude = waveVariables.amplitude
     const frequency = waveVariables.frequency
+    this.size = size
 
     const positions = new Float32Array(count * 3)
 
@@ -45,12 +48,32 @@ export class Line {
     particleMaterial.blending = THREE.AdditiveBlending
 
     const particles = new THREE.Points(particleGeometry, particleMaterial)
+
     particles.position.x = position.x
     particles.position.y = position.y
 
     this.mesh = particles
 
     scene.add(particles)
-    return particles
+  }
+
+  checkForCollision = (particleIndex1, particleIndex2) => {
+    // TODO: check collisions in 3D space
+    const x1 = this.mesh.geometry.attributes.position.array[particleIndex1 * 3]
+    const y1 = this.mesh.geometry.attributes.position.array[
+      particleIndex1 * 3 + 1
+    ]
+    const x2 = this.mesh.geometry.attributes.position.array[particleIndex2 * 3]
+    const y2 = this.mesh.geometry.attributes.position.array[
+      particleIndex2 * 3 + 1
+    ]
+
+    const d = distance(x1, x2, y1, y2)
+
+    if (d < this.size + this.size) {
+      return true
+    } else {
+      return false
+    }
   }
 }

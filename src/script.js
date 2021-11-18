@@ -141,8 +141,8 @@ function moveLineParticles (uniqueLines) {
 
     if (movingParticles.length === 0) {
       movingParticles.push({
-        particleIndex: i3,
-        line: line
+        particleIndex: line.index,
+        line
       })
     }
   })
@@ -180,13 +180,18 @@ const tick = () => {
   controls.update()
 
   if (animateParticles && movingParticles.length) {
-    const i3 = movingParticles[0].particleIndex
+    const i3 = movingParticles[0].particleIndex * 3
     const position = movingParticles[0].line.object.geometry.attributes.position
 
     position.array[i3 + 1] += Math.sin(i * 0.3) * 0.09
     position.array[i3] += Math.sin(i * 0.1) * 0.08
 
     position.needsUpdate = true
+
+    findCollisions(
+      movingParticles[0].line.object.uuid,
+      movingParticles[0].particleIndex
+    )
   }
 
   // Render
@@ -212,4 +217,16 @@ function setMousePosition (event) {
   var rect = canvas.getBoundingClientRect()
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+}
+
+function findCollisions (id, index) {
+  const activeParticleLine = lines.filter(line => line.mesh.uuid === id)
+  const particlePositions =
+    activeParticleLine[0].mesh.geometry.attributes.position
+
+  for (let i = 0; i < particlePositions.count; i++) {
+    if (i != index) {
+      activeParticleLine[0].checkForCollision(index, i)
+    }
+  }
 }
