@@ -19,7 +19,7 @@ export class Line {
     const amplitude = waveVariables.amplitude
     const frequency = waveVariables.frequency
 
-    var positions = new Float32Array(count * 3)
+    const positions = new Float32Array(count * 3)
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3
@@ -51,12 +51,6 @@ export class Line {
     this.mesh = particles
 
     scene.add(particles)
-
     return particles
-  }
-
-  particleLineDrag () {
-    console.log('hit')
-    // calculate a delta distance and apply that delta to a radius of nearby points, the larger the delta, the larger the radius
   }
 }

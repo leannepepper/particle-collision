@@ -2,7 +2,6 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
-import CANNON from 'cannon'
 import SimplexNoise from 'simplex-noise'
 import { Line } from './Line'
 
@@ -14,8 +13,14 @@ const gui = new dat.GUI()
 const threshold = 0.02
 const noise = new SimplexNoise('seed')
 let intersections = []
+const mouse = new THREE.Vector2()
+const raycaster = new THREE.Raycaster()
+raycaster.params.Points.threshold = threshold
+
 const lines = []
-let initialMouse = new THREE.Vector3()
+const movingParticles = []
+let dragging = false
+let animateParticles = false
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -24,7 +29,7 @@ const canvas = document.querySelector('canvas.webgl')
 export const scene = new THREE.Scene()
 
 // Create Lines
-for (let i = 0; i < 2; i++) {
+for (let i = 0; i < 1; i++) {
   const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 5.5))
   const count = Math.round(45 / noiseValue)
   const particleLine = new Line()
@@ -57,24 +62,16 @@ const sizes = {
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(
-  75,
+  60,
   sizes.width / sizes.height,
   0.1,
-  2000
+  200
 )
 
-camera.position.z = 1
+camera.position.z = 2
+camera.lookAt(scene.position)
 
 scene.add(camera)
-
-/**
- * Raycaster
- */
-
-const raycaster = new THREE.Raycaster()
-raycaster.params.Points.threshold = threshold
-
-let mouse = new THREE.Vector3(0, 0, 0)
 
 window.addEventListener('resize', () => {
   // Update sizes
@@ -90,55 +87,65 @@ window.addEventListener('resize', () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
-let isMoving = false
-
 function onMouseUp (event) {
-  isMoving = false
-  // controls.enabled = true
-
-  //on mouseup release line and animate and clear initial mouse
+  if (dragging) {
+    animateParticles = true
+    dragging = false
+  }
 }
 
 function onMouseDown (event) {
+  // Set Raycaster
+  setMousePosition(event)
   raycaster.setFromCamera(mouse, camera)
 
-  intersections = raycaster.intersectObjects(
-    lines.map(line => line.mesh),
-    false
-  )
-
+  // Get Index
+  intersections = raycaster.intersectObjects(lines.map(line => line.mesh))
   if (intersections.length > 0) {
-    controls.enabled = false
-    isMoving = true
-    initialMouse.copy(mouse)
+    dragging = true
   }
 }
 
 function onMouseMove (event) {
-  mouse.x = (event.clientX / sizes.width) * 2 - 1
-  mouse.y = -(event.clientY / sizes.height) * 2 + 1
+  event.preventDefault()
+  setMousePosition(event)
 
-  if (isMoving) {
-    // Reduce the intersections down to include one unique
-    // TODO: refactor to use reduce
+  if (dragging) {
     let uniqueLines = []
     const array1 = []
+    const array2 = []
+
     for (let i = 0; i < intersections.length; i++) {
       if (i === 0) {
         array1.push(intersections[i])
       } else {
-        const array2 = []
         array1.forEach(item => {
           if (item.object.uuid !== intersections[i].object.uuid) {
             array2.push(intersections[i])
           }
         })
-        uniqueLines = array1.concat(array2)
       }
+      uniqueLines = array1.concat(array2)
     }
 
     moveLineParticles(uniqueLines)
   }
+}
+
+function moveLineParticles (uniqueLines) {
+  uniqueLines.forEach(line => {
+    const i3 = line.index * 3
+
+    line.object.geometry.attributes.position.array[i3 + 1] = mouse.y
+    line.object.geometry.attributes.position.needsUpdate = true
+
+    if (movingParticles.length === 0) {
+      movingParticles.push({
+        particleIndex: i3,
+        line: line
+      })
+    }
+  })
 }
 
 window.addEventListener('mousemove', onMouseMove)
@@ -148,64 +155,23 @@ window.addEventListener('mouseup', onMouseUp)
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
+controls.enabled = false
 
 /**
  * Renderer
  */
 const renderer = new THREE.WebGLRenderer({
-  canvas: canvas
+  canvas: canvas,
+  antialias: true
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-
-function moveLineParticles (uniqueLines) {
-  // for each line take that particle and move it down by the mouse delta.
-  uniqueLines.forEach(line => {
-    const i3 = line.index * 3
-    const mouseDelta =
-      Math.abs(line.point.y) -
-      Math.abs(line.object.geometry.attributes.position.array[i3 + 1])
-
-    console.log(
-      line.point.y,
-      line.object.geometry.attributes.position.array[i3 + 1],
-      mouseDelta
-    )
-    // Change the initial point
-    line.object.geometry.attributes.position.array[i3 + 1] = line.point.y
-
-    line.object.geometry.attributes.position.needsUpdate = true
-
-    dragParticleLine(line, mouseDelta)
-  })
-}
-
-function dragParticleLine (line, delta) {
-  // the larger the delta, then larger the radius to move
-
-  const disruptRadius = randomIntFromInterval(5, 5)
-  const lineCount = line.object.geometry.attributes.position.array.length / 3
-
-  for (let i = 0; i < disruptRadius; i++) {
-    const rightSideEffectParticleIndex = (line.index + i) * 3
-    const leftSideEffectParticleIndex = (line.index - i) * 3
-
-    line.object.geometry.attributes.position.array[
-      rightSideEffectParticleIndex + 1
-    ] = line.point.y
-
-    line.object.geometry.attributes.position.array[
-      leftSideEffectParticleIndex + 1
-    ] = line.point.y
-  }
-
-  line.object.geometry.attributes.position.needsUpdate = true
-}
 
 /**
  * Animate
  */
 const clock = new THREE.Clock()
+let i = 0
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime()
@@ -213,11 +179,23 @@ const tick = () => {
   // Update controls
   controls.update()
 
+  if (animateParticles && movingParticles.length) {
+    const i3 = movingParticles[0].particleIndex
+    const position = movingParticles[0].line.object.geometry.attributes.position
+
+    position.array[i3 + 1] += Math.sin(i * 0.3) * 0.09
+    position.array[i3] += Math.sin(i * 0.1) * 0.08
+
+    position.needsUpdate = true
+  }
+
   // Render
   renderer.render(scene, camera)
 
   // Call tick again on the next frame
   window.requestAnimationFrame(tick)
+
+  i++
 }
 
 tick()
@@ -227,4 +205,11 @@ tick()
 function randomIntFromInterval (min, max) {
   // min and max included
   return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
+function setMousePosition (event) {
+  event.preventDefault()
+  var rect = canvas.getBoundingClientRect()
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
 }
