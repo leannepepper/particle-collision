@@ -29,7 +29,7 @@ const canvas = document.querySelector('canvas.webgl')
 export const scene = new THREE.Scene()
 
 // Create Lines
-for (let i = 0; i < 1; i++) {
+for (let i = 0; i < 2; i++) {
   const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 5.5))
   const count = Math.round(45 / noiseValue)
   const particleLine = new Line()
@@ -221,12 +221,17 @@ function setMousePosition (event) {
 
 function findCollisions (id, index) {
   const activeParticleLine = lines.filter(line => line.mesh.uuid === id)
-  const particlePositions =
-    activeParticleLine[0].mesh.geometry.attributes.position
 
-  for (let i = 0; i < particlePositions.count; i++) {
-    if (i != index) {
-      activeParticleLine[0].checkForCollision(index, i)
+  for (let i = 0; i < lines.length; i++) {
+    const particleCount = lines[i].mesh.geometry.attributes.position.count
+
+    for (let j = 0; j < particleCount; j++) {
+      if (j != index) {
+        activeParticleLine[0].checkForCollision(index, {
+          lineToCheck: lines[i],
+          particleIndex2: j
+        })
+      }
     }
   }
 }
