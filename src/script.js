@@ -13,7 +13,7 @@ const gui = new dat.GUI()
 const threshold = 0.02
 const noise = new SimplexNoise('seed')
 let intersections = []
-const mouse = new THREE.Vector2()
+const mouse = new THREE.Vector3()
 const raycaster = new THREE.Raycaster()
 raycaster.params.Points.threshold = threshold
 
@@ -171,7 +171,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  * Animate
  */
 const clock = new THREE.Clock()
-let i = 0
+let time = 0
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime()
@@ -183,10 +183,7 @@ const tick = () => {
     const i3 = movingParticles[0].particleIndex * 3
     const position = movingParticles[0].line.object.geometry.attributes.position
 
-    position.array[i3 + 1] += Math.sin(i * 0.3) * 0.09
-    position.array[i3] += Math.sin(i * 0.1) * 0.08
-
-    position.needsUpdate = true
+    moveParticleToStartCollisions(i3, position)
 
     findCollisions(
       movingParticles[0].line.object.uuid,
@@ -200,7 +197,7 @@ const tick = () => {
   // Call tick again on the next frame
   window.requestAnimationFrame(tick)
 
-  i++
+  time++
 }
 
 tick()
@@ -217,6 +214,38 @@ function setMousePosition (event) {
   var rect = canvas.getBoundingClientRect()
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+}
+
+function moveParticleToStartCollisions (index, particlePositions) {
+  // Basic Physics: velocity.add(acceleration)
+  //                position.add(velocity)
+
+  const acceleration = new THREE.Vector3(0.0)
+
+  const position = new THREE.Vector3(
+    particlePositions.array[index],
+    particlePositions.array[index + 1],
+    particlePositions.array[index + 2]
+  )
+
+  const velocity = applyForce()
+
+  //acceleration.copy(position).sub(mouse)
+
+  position.add(velocity)
+
+  particlePositions.array[index] = position.x
+  particlePositions.array[index + 1] = position.y
+
+  particlePositions.needsUpdate = true
+}
+
+function applyForce () {
+  const gravity = new THREE.Vector3(0.0, -0.01, 0.0)
+  const velocity = new THREE.Vector3(0.0)
+
+  velocity.add(gravity)
+  return velocity
 }
 
 function findCollisions (id, index) {
