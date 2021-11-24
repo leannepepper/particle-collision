@@ -36,10 +36,12 @@ const box = new THREE.Mesh(
   new THREE.MeshBasicMaterial({ color: 'red', wireframe: true })
 )
 box.position.y = 0.2
+// box.position.x = 0.5
+
 scene.add(box)
 
 // Create Lines
-for (let i = 0; i < 2; i++) {
+for (let i = 0; i < 4; i++) {
   const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 5.5))
   const count = Math.round(45 / noiseValue)
   const particleLine = new Line()

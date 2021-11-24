@@ -26,36 +26,47 @@ export function findCollisions (id, index) {
 const velocity = new THREE.Vector3(0.0)
 const position = new THREE.Vector3(0.0)
 const acceleration = new THREE.Vector3(0.0)
-const gravity = new THREE.Vector3(0.0, -0.001, 0.0)
+const gravity = new THREE.Vector3(0.0, -0.0001, 0.0)
+const wind = new THREE.Vector3(0.0001, 0.0, 0.0)
+
 const LOWER_BOUNDARY = -0.5
+const TOP_BOUNDARY = 0.5
+const RIGHT_BOUNDARY = 2.0
+const LEFT_BOUNDARY = -2.0
 
 export function moveParticleToStartCollisions (index, particlePositions) {
   position.x = particlePositions.array[index]
   position.y = particlePositions.array[index + 1]
   position.z = particlePositions.array[index + 2]
 
+  applyForce(wind)
   applyForce(gravity)
   velocity.add(acceleration)
 
-  if (bounceOffEdge()) {
-    position.y = LOWER_BOUNDARY
-    velocity.multiply(new THREE.Vector3(0.0, -1.0, 0.0))
-  }
+  bounceOffEdges()
 
-  console.log(position.y)
   position.add(velocity)
-  console.log('after', position.y)
 
   particlePositions.array[index] = position.x
   particlePositions.array[index + 1] = position.y
-
   particlePositions.needsUpdate = true
 }
 
-function bounceOffEdge () {
+function bounceOffEdges () {
   if (position.y <= LOWER_BOUNDARY) {
+    velocity.multiply(new THREE.Vector3(0.0, -1.0, 0.0))
+    return true
+  } else if (position.y >= TOP_BOUNDARY) {
+    velocity.multiply(new THREE.Vector3(0.0, 1.0, 0.0))
+    return true
+  } else if (position.x <= LEFT_BOUNDARY) {
+    velocity.multiply(new THREE.Vector3(1.0, 0.0, 0.0))
+    return true
+  } else if (position.x >= RIGHT_BOUNDARY) {
+    velocity.multiply(new THREE.Vector3(-1.0, 0.0, 0.0))
     return true
   }
+  console.log('none')
   return false
 }
 
