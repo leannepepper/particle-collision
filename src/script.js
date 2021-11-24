@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 import SimplexNoise from 'simplex-noise'
 import { Line } from './Line'
+import { findCollisions, moveParticleToStartCollisions } from './collision'
 
 /**
  * Base
@@ -17,7 +18,7 @@ const mouse = new THREE.Vector3()
 const raycaster = new THREE.Raycaster()
 raycaster.params.Points.threshold = threshold
 
-const lines = []
+export const lines = []
 const movingParticles = []
 let dragging = false
 let animateParticles = false
@@ -27,6 +28,15 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 export const scene = new THREE.Scene()
+
+// Add debug box
+
+const box = new THREE.Mesh(
+  new THREE.BoxBufferGeometry(3.0, 1.5, 1),
+  new THREE.MeshBasicMaterial({ color: 'red', wireframe: true })
+)
+box.position.y = 0.2
+scene.add(box)
 
 // Create Lines
 for (let i = 0; i < 2; i++) {
@@ -171,13 +181,9 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  * Animate
  */
 const clock = new THREE.Clock()
-let time = 0
 
 const tick = () => {
-  const elapsedTime = clock.getElapsedTime()
-
-  // Update controls
-  controls.update()
+  // const elapsedTime = clock.getElapsedTime()
 
   if (animateParticles && movingParticles.length) {
     const i3 = movingParticles[0].particleIndex * 3
@@ -191,76 +197,18 @@ const tick = () => {
     )
   }
 
-  // Render
+  controls.update()
   renderer.render(scene, camera)
-
-  // Call tick again on the next frame
   window.requestAnimationFrame(tick)
-
-  time++
 }
 
 tick()
 
 /* Utils */
 
-function randomIntFromInterval (min, max) {
-  // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min)
-}
-
 function setMousePosition (event) {
   event.preventDefault()
   var rect = canvas.getBoundingClientRect()
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-}
-
-function moveParticleToStartCollisions (index, particlePositions) {
-  // Basic Physics: velocity.add(acceleration)
-  //                position.add(velocity)
-
-  const acceleration = new THREE.Vector3(0.0)
-
-  const position = new THREE.Vector3(
-    particlePositions.array[index],
-    particlePositions.array[index + 1],
-    particlePositions.array[index + 2]
-  )
-
-  const velocity = applyForce()
-
-  //acceleration.copy(position).sub(mouse)
-
-  position.add(velocity)
-
-  particlePositions.array[index] = position.x
-  particlePositions.array[index + 1] = position.y
-
-  particlePositions.needsUpdate = true
-}
-
-function applyForce () {
-  const gravity = new THREE.Vector3(0.0, -0.01, 0.0)
-  const velocity = new THREE.Vector3(0.0)
-
-  velocity.add(gravity)
-  return velocity
-}
-
-function findCollisions (id, index) {
-  const activeParticleLine = lines.filter(line => line.mesh.uuid === id)
-
-  for (let i = 0; i < lines.length; i++) {
-    const particleCount = lines[i].mesh.geometry.attributes.position.count
-
-    for (let j = 0; j < particleCount; j++) {
-      if (j != index) {
-        activeParticleLine[0].checkForCollision(index, {
-          lineToCheck: lines[i],
-          particleIndex2: j
-        })
-      }
-    }
-  }
 }

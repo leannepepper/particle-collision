@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { scene } from './script'
-import { distance } from './collisionDetection'
+import { distance } from './collision'
 
 /**
  * Textures
