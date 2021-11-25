@@ -11,13 +11,23 @@ export function findCollisions (id, index) {
 
   for (let i = 0; i < lines.length; i++) {
     const particleCount = lines[i].mesh.geometry.attributes.position.count
+    const x1 =
+      activeParticleLine[0].mesh.geometry.attributes.position.array[index * 3]
+    const y1 =
+      activeParticleLine[0].mesh.geometry.attributes.position.array[
+        index * 3 + 1
+      ]
 
     for (let j = 0; j < particleCount; j++) {
       if (j != index) {
-        activeParticleLine[0].checkForCollision(index, {
-          lineToCheck: lines[i],
-          particleIndex2: j
-        })
+        const x2 = lines[i].mesh.geometry.attributes.position.array[j * 3]
+        const y2 = lines[i].mesh.geometry.attributes.position.array[j * 3 + 1]
+
+        const d = distance(x1, x2, y1, y2)
+
+        if (d < activeParticleLine[0].size + activeParticleLine[0].size) {
+          activeParticleLine[0].reactToCollision(lines[i], j)
+        }
       }
     }
   }
@@ -31,8 +41,8 @@ const wind = new THREE.Vector3(0.0001, 0.0, 0.0)
 
 const LOWER_BOUNDARY = -0.5
 const TOP_BOUNDARY = 0.5
-const RIGHT_BOUNDARY = 2.0
-const LEFT_BOUNDARY = -2.0
+const RIGHT_BOUNDARY = 2.5
+const LEFT_BOUNDARY = -2.5
 
 export function moveParticleToStartCollisions (index, particlePositions) {
   position.x = particlePositions.array[index]
@@ -66,7 +76,6 @@ function bounceOffEdges () {
     velocity.multiply(new THREE.Vector3(-1.0, 0.0, 0.0))
     return true
   }
-  console.log('none')
   return false
 }
 

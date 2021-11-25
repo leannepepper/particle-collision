@@ -140,11 +140,11 @@ function onMouseMove (event) {
       uniqueLines = array1.concat(array2)
     }
 
-    moveLineParticles(uniqueLines)
+    dragInitialParticle(uniqueLines)
   }
 }
 
-function moveLineParticles (uniqueLines) {
+function dragInitialParticle (uniqueLines) {
   uniqueLines.forEach(line => {
     const i3 = line.index * 3
 
@@ -187,20 +187,11 @@ const clock = new THREE.Clock()
 const tick = () => {
   // const elapsedTime = clock.getElapsedTime()
 
-  if (animateParticles && movingParticles.length) {
-    const i3 = movingParticles[0].particleIndex * 3
-    const position = movingParticles[0].line.object.geometry.attributes.position
-
-    moveParticleToStartCollisions(i3, position)
-
-    findCollisions(
-      movingParticles[0].line.object.uuid,
-      movingParticles[0].particleIndex
-    )
-  }
+  maybeMoveParticles()
 
   controls.update()
   renderer.render(scene, camera)
+
   window.requestAnimationFrame(tick)
 }
 
@@ -213,4 +204,17 @@ function setMousePosition (event) {
   var rect = canvas.getBoundingClientRect()
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+}
+
+function maybeMoveParticles () {
+  if (animateParticles && movingParticles.length) {
+    const i3 = movingParticles[0].particleIndex * 3
+    const position = movingParticles[0].line.object.geometry.attributes.position
+
+    moveParticleToStartCollisions(i3, position)
+    findCollisions(
+      movingParticles[0].line.object.uuid,
+      movingParticles[0].particleIndex
+    )
+  }
 }

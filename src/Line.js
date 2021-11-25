@@ -57,30 +57,9 @@ export class Line {
     scene.add(particles)
   }
 
-  checkForCollision = (particleIndex1, lineToCheckObj) => {
-    const { lineToCheck, particleIndex2 } = lineToCheckObj
-
-    // TODO: check collisions in 3D space
-    const x1 = this.mesh.geometry.attributes.position.array[particleIndex1 * 3]
-    const y1 = this.mesh.geometry.attributes.position.array[
-      particleIndex1 * 3 + 1
-    ]
-
-    const x2 =
-      lineToCheck.mesh.geometry.attributes.position.array[particleIndex2 * 3]
-    let y2 =
-      lineToCheck.mesh.geometry.attributes.position.array[
-        particleIndex2 * 3 + 1
-      ]
-
-    const d = distance(x1, x2, y1, y2)
-
-    if (d < this.size + this.size) {
-      //physics to react to collision
-      lineToCheck.mesh.geometry.attributes.position.array[
-        particleIndex2 * 3 + 1
-      ] += 0.5
-      lineToCheck.mesh.geometry.attributes.position.needsUpdate = true
-    }
+  reactToCollision = (line, index) => {
+    // for collision you need to know what direction the particle was hit, what percentage from the center it collided
+    line.mesh.geometry.attributes.position.array[index * 3 + 1] += 0.5
+    line.mesh.geometry.attributes.position.needsUpdate = true
   }
 }
