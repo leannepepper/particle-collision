@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { scene } from './script'
-import { distance } from './collision'
+import { distance, findCollisionSide } from './collision'
 
 /**
  * Textures
@@ -57,9 +57,13 @@ export class Line {
     scene.add(particles)
   }
 
-  reactToCollision = (line, index) => {
+  reactToCollision = (line, index, r1, r2) => {
     // for collision you need to know what direction the particle was hit, what percentage from the center it collided
-    line.mesh.geometry.attributes.position.array[index * 3 + 1] += 0.5
+    line.mesh.geometry.attributes.position.array[index * 3 + 1] += 0.05
     line.mesh.geometry.attributes.position.needsUpdate = true
+
+    // {x,y,w,h}
+
+    findCollisionSide(r1, r2)
   }
 }

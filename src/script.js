@@ -38,7 +38,7 @@ const box = new THREE.Mesh(
 box.position.y = 0.2
 // box.position.x = 0.5
 
-scene.add(box)
+// scene.add(box)
 
 // Create Lines
 for (let i = 0; i < 4; i++) {

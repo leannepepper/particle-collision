@@ -8,7 +8,6 @@ export function distance (x1, x2, y1, y2) {
 
 export function findCollisions (id, index) {
   const activeParticleLine = lines.filter(line => line.mesh.uuid === id)
-
   for (let i = 0; i < lines.length; i++) {
     const particleCount = lines[i].mesh.geometry.attributes.position.count
     const x1 =
@@ -26,7 +25,20 @@ export function findCollisions (id, index) {
         const d = distance(x1, x2, y1, y2)
 
         if (d < activeParticleLine[0].size + activeParticleLine[0].size) {
-          activeParticleLine[0].reactToCollision(lines[i], j)
+          const r1 = {
+            x: x1,
+            y: y1,
+            w: activeParticleLine[0].size,
+            h: activeParticleLine[0].size
+          }
+          const r2 = {
+            x: x2,
+            y: y2,
+            w: lines[i].size,
+            h: lines[i].size
+          }
+
+          activeParticleLine[0].reactToCollision(lines[i], j, r1, r2)
         }
       }
     }
@@ -81,4 +93,26 @@ function bounceOffEdges () {
 
 function applyForce (force) {
   acceleration.add(force)
+}
+
+export function findCollisionSide (r1, r2) {
+  // https://stackoverflow.com/questions/29861096/detect-which-side-of-a-rectangle-is-colliding-with-another-rectangle
+
+  const dx = r1.x + r1.w / 2 - (r2.x + r2.w / 2)
+  const dy = r1.y + r1.h / 2 - (r2.y + r2.h / 2)
+  const width = (r1.w + r2.w) / 2
+  const height = (r1.h + r2.h) / 2
+  const crossWidth = width * dy
+  const crossHeight = height * dx
+  let collision = 'none'
+
+  if (Math.abs(dx) <= width && Math.abs(dy) <= height) {
+    if (crossWidth > crossHeight) {
+      collision = crossWidth > -crossHeight ? 'bottom' : 'left'
+    } else {
+      collision = crossWidth > -crossHeight ? 'right' : 'top'
+    }
+  }
+  // console.log({ collision })
+  // return collision
 }
