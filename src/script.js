@@ -39,6 +39,9 @@ box.position.y = 0.2
 // box.position.x = 0.5
 
 // scene.add(box)
+const particleSize = {
+  value: 0.1
+}
 
 // Create Lines
 for (let i = 0; i < 4; i++) {
@@ -48,8 +51,8 @@ for (let i = 0; i < 4; i++) {
 
   particleLine.createParticleLine(
     count,
-    0.06 * noiseValue,
-    0xffff00,
+    particleSize.value * noiseValue,
+    new THREE.Color((i * 10) / noiseValue, i / noiseValue, i),
     new THREE.Vector3(-1.3, 0, 0),
     {
       spread: noiseValue,
@@ -218,3 +221,11 @@ function maybeMoveParticles () {
     )
   }
 }
+
+// Debug Panel
+gui
+  .add(particleSize, 'value')
+  .min(0)
+  .max(0.3)
+  .step(0.01)
+  .name('particleSize')

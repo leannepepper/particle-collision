@@ -58,12 +58,39 @@ export class Line {
   }
 
   reactToCollision = (line, index, r1, r2) => {
-    // for collision you need to know what direction the particle was hit, what percentage from the center it collided
-    line.mesh.geometry.attributes.position.array[index * 3 + 1] += 0.05
+    const collisionSide = findCollisionSide(r1, r2)
+    const position = new THREE.Vector3(
+      line.mesh.geometry.attributes.position.array[index * 3],
+      line.mesh.geometry.attributes.position.array[index * 3 + 1],
+      line.mesh.geometry.attributes.position.array[index * 3 + 2]
+    )
+
+    switch (collisionSide) {
+      case 'none':
+        break
+      case 'left':
+        position.add(new THREE.Vector3(0.05, 0.0, 0.0))
+        break
+
+      case 'right':
+        position.add(new THREE.Vector3(-0.05, 0.0, 0.0))
+        break
+
+      case 'top':
+        position.add(new THREE.Vector3(0.0, 0.05, 0.0))
+        break
+
+      case 'bottom':
+        position.add(new THREE.Vector3(0.0, -0.05, 0.0))
+        break
+
+      default:
+        break
+    }
+
+    line.mesh.geometry.attributes.position.array[index * 3] = position.x
+    line.mesh.geometry.attributes.position.array[index * 3 + 1] = position.y
+
     line.mesh.geometry.attributes.position.needsUpdate = true
-
-    // {x,y,w,h}
-
-    findCollisionSide(r1, r2)
   }
 }

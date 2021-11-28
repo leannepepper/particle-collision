@@ -113,6 +113,5 @@ export function findCollisionSide (r1, r2) {
       collision = crossWidth > -crossHeight ? 'right' : 'top'
     }
   }
-  // console.log({ collision })
-  // return collision
+  return collision
 }
