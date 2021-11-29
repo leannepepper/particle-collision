@@ -10,23 +10,25 @@ import { findCollisions, moveParticleToStartCollisions } from './collision'
  * Base
  */
 // Debug
-const gui = new dat.GUI()
-const threshold = 0.02
+// const gui = new dat.GUI()
 const noise = new SimplexNoise('seed')
-let intersections = []
-const mouse = new THREE.Vector3()
+const movingParticles = []
+const threshold = 0.02
+const canvas = document.querySelector('canvas.webgl')
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight
+}
+
 const raycaster = new THREE.Raycaster()
 raycaster.params.Points.threshold = threshold
 
-export const lines = []
-const movingParticles = []
+let intersections = []
 let dragging = false
 let animateParticles = false
 
-// Canvas
-const canvas = document.querySelector('canvas.webgl')
-
-// Scene
+export const lines = []
+export const mouse = new THREE.Vector3()
 export const scene = new THREE.Scene()
 
 // Add debug box
@@ -39,20 +41,22 @@ box.position.y = 0.2
 // box.position.x = 0.5
 
 // scene.add(box)
-const particleSize = {
-  value: 0.1
+
+const particleParams = {
+  size: 0.15,
+  count: 10
 }
 
 // Create Lines
-for (let i = 0; i < 4; i++) {
+for (let i = 0; i < particleParams.count; i++) {
   const noiseValue = Math.abs(noise.noise3D(i, i * 1.6, 5.5))
   const count = Math.round(45 / noiseValue)
   const particleLine = new Line()
 
   particleLine.createParticleLine(
     count,
-    particleSize.value * noiseValue,
-    new THREE.Color((i * 10) / noiseValue, i / noiseValue, i),
+    particleParams.size * noiseValue,
+    new THREE.Color(noiseValue / i + 5, noiseValue / i + 1, 10 / i),
     new THREE.Vector3(-1.3, 0, 0),
     {
       spread: noiseValue,
@@ -62,14 +66,6 @@ for (let i = 0; i < 4; i++) {
   )
 
   lines.push(particleLine)
-}
-
-/**
- * Sizes
- */
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight
 }
 
 /**
@@ -223,9 +219,15 @@ function maybeMoveParticles () {
 }
 
 // Debug Panel
-gui
-  .add(particleSize, 'value')
-  .min(0)
-  .max(0.3)
-  .step(0.01)
-  .name('particleSize')
+// gui
+//   .add(particleParams, 'size')
+//   .min(0)
+//   .max(0.3)
+//   .step(0.01)
+//   .name('particleSize')
+// gui
+//   .add(particleParams, 'count')
+//   .min(0)
+//   .max(10)
+//   .step(1)
+//   .name('lineCount')

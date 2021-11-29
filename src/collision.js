@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { lines } from './script'
+import { lines, mouse } from './script'
 
 export function distance (x1, x2, y1, y2) {
   const distance = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
@@ -46,26 +46,29 @@ export function findCollisions (id, index) {
 }
 
 const velocity = new THREE.Vector3(0.0)
-const position = new THREE.Vector3(0.0)
+
 const acceleration = new THREE.Vector3(0.0)
-const gravity = new THREE.Vector3(0.0, -0.0001, 0.0)
-const wind = new THREE.Vector3(0.0001, 0.0, 0.0)
+// const gravity = new THREE.Vector3(0.0, -0.0001, 0.0)
+const wind = new THREE.Vector3(0.00001, 0.0, 0.0)
 
 const LOWER_BOUNDARY = -0.5
 const TOP_BOUNDARY = 0.5
 const RIGHT_BOUNDARY = 2.5
-const LEFT_BOUNDARY = -2.5
+const LEFT_BOUNDARY = -1.0
 
 export function moveParticleToStartCollisions (index, particlePositions) {
+  const gravity = new THREE.Vector3(0.0, -0.0001, 0.0)
+  const position = new THREE.Vector3(0.0)
+
   position.x = particlePositions.array[index]
   position.y = particlePositions.array[index + 1]
   position.z = particlePositions.array[index + 2]
 
-  applyForce(wind)
-  applyForce(gravity)
+  applyForce(acceleration, gravity)
   velocity.add(acceleration)
 
-  bounceOffEdges()
+  bounceOffEdges(position, velocity, wind)
+  applyForce(acceleration, wind)
 
   position.add(velocity)
 
@@ -74,24 +77,19 @@ export function moveParticleToStartCollisions (index, particlePositions) {
   particlePositions.needsUpdate = true
 }
 
-function bounceOffEdges () {
+function bounceOffEdges (position, velocity, wind) {
   if (position.y <= LOWER_BOUNDARY) {
     velocity.multiply(new THREE.Vector3(0.0, -1.0, 0.0))
-    return true
   } else if (position.y >= TOP_BOUNDARY) {
     velocity.multiply(new THREE.Vector3(0.0, 1.0, 0.0))
-    return true
   } else if (position.x <= LEFT_BOUNDARY) {
-    velocity.multiply(new THREE.Vector3(1.0, 0.0, 0.0))
-    return true
+    velocity.multiply(new THREE.Vector3(-1.0, 0.0, 0.0))
   } else if (position.x >= RIGHT_BOUNDARY) {
     velocity.multiply(new THREE.Vector3(-1.0, 0.0, 0.0))
-    return true
   }
-  return false
 }
 
-function applyForce (force) {
+function applyForce (acceleration, force) {
   acceleration.add(force)
 }
 
