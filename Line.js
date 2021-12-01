@@ -6,7 +6,7 @@ import { distance, findCollisionSide } from './collision'
  * Textures
  */
 const textureLoader = new THREE.TextureLoader()
-const particleTexture = textureLoader.load('/particle.png')
+const particleTexture = textureLoader.load('particle.png')
 
 export class Line {
   constructor () {
